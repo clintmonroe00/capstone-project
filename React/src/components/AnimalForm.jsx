@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const initialFormData = {
   animal_id: '',
@@ -17,23 +18,52 @@ const initialFormData = {
   location_long: '',
 };
 
+const fetchAnimal = async (id) => {
+  const { data } = await axios.get(`http://localhost:8000/animals/${id}`);
+  return data;
+};
+
+const updateAnimal = async ({ id, data }) => {
+  return axios.put(`http://localhost:8000/animals/${id}`, data);
+};
+
+const createAnimal = async (data) => {
+  return axios.post('http://localhost:8000/animals/', data);
+};
+
 const AnimalForm = () => {
   const { id } = useParams(); // Get the animal ID from the URL (for editing)
-  const [formData, setFormData] = useState(
-    initialFormData
-  );
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState(initialFormData);
 
-  // Fetch animal data for editing if ID is provided
-  useEffect(() => {
-    if (id) {
-      axios
-        .get(`http://localhost:8000/animals/${id}`) 
-        .then((response) => {
-          setFormData(response.data);
-        })
-        .catch((error) => console.error('Error fetching animal data:', error));
-    }
-  }, [id]);
+  // Fetch data if editing an existing animal
+  useQuery({
+    queryKey: ['animal', id],
+    queryFn: () => fetchAnimal(id),
+    enabled: !!id, // Only fetch if ID is provided
+    onSuccess: (data) => setFormData(data),
+    onError: (error) => console.error('Error fetching animal data:', error),
+  });
+
+  // Mutations for create and update
+  const createMutation = useMutation({
+    mutationFn: createAnimal,
+    onSuccess: () => {
+      alert('Animal created successfully!');
+      queryClient.invalidateQueries(['animals']); // Refresh animal list
+      setFormData(initialFormData); // Reset form
+    },
+    onError: (error) => console.error('Error creating animal:', error),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateAnimal,
+    onSuccess: () => {
+      alert('Animal updated successfully!');
+      queryClient.invalidateQueries(['animal', id]); // Refresh specific animal data
+    },
+    onError: (error) => console.error('Error updating animal:', error),
+  });
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -48,7 +78,6 @@ const AnimalForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Format date fields to YYYY-MM-DD
     const formattedData = {
       ...formData,
       date_of_birth: formData.date_of_birth
@@ -59,17 +88,11 @@ const AnimalForm = () => {
         : null,
     };
 
-    const method = id ? 'put' : 'post'; // Use PUT for editing, POST for creating
-    const url = id
-      ? `http://localhost:8000/animals/${id}`
-      : 'http://localhost:8000/animals/';
-
-    axios[method](url, formattedData)
-      .then((response) => {
-        alert(`Animal ${id ? 'updated' : 'created'} successfully!`);
-        setFormData(initialFormData); // Reset the form to its initial state
-      })
-      .catch((error) => console.error('Error submitting form:', error));
+    if (id) {
+      updateMutation.mutate({ id, data: formattedData });
+    } else {
+      createMutation.mutate(formattedData);
+    }
   };
 
   return (
