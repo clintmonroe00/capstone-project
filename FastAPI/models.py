@@ -2,6 +2,7 @@ from database import Base
 from sqlalchemy import Column, Integer, String, Date, Float
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import case, func
 
 # Define a base class for all ORM models using SQLAlchemy's declarative system
 # Base = declarative_base()
@@ -45,7 +46,20 @@ class Animal(Base):
     @hybrid_property
     def age_upon_outcome_in_weeks(self):
         # Calculate age in weeks if the date of birth is available
-        if self.date_of_birth:
+        if self.date_of_birth and self.date_of_outcome:
             delta = self.date_of_outcome - self.date_of_birth # Get the difference in days
             return delta.days // 7             # Convert days to weeks
-        return None                            # Return None if the date of birth is not provided
+        return 0                            # Return None if the date of birth is not provided
+    
+    @age_upon_outcome_in_weeks.expression
+    def age_upon_outcome_in_weeks(cls):
+        # SQLAlchemy implementation
+        return case(
+        (
+            cls.date_of_birth.isnot(None) & cls.date_of_outcome.isnot(None),
+            func.floor(
+                (func.julianday(cls.date_of_outcome) - func.julianday(cls.date_of_birth)) / 7
+            ),
+        ),
+        else_=0,
+        )

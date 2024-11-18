@@ -1,8 +1,15 @@
 // Fetch the list of all animals from the backend API
-export async function fetchAnimals() {
-    const response = await fetch('http://localhost:8000/animals');
+export async function fetchAnimals({ animalType, breed, sex, minAge, maxAge }) {
+    const params = new URLSearchParams();
+    if (animalType) params.append("animal_type", animalType);
+    if (breed && breed.length > 0) breed.forEach((b) => params.append("breed", b));
+    if (sex) params.append("sex_upon_outcome", sex);
+    if (minAge !== null) params.append("min_age", minAge);
+    if (maxAge !== null) params.append("max_age", maxAge);
+
+    const response = await fetch(`http://localhost:8000/animals?${params.toString()}`);
     if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
     }
     return response.json();
 }

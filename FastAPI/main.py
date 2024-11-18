@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends
 from typing import Annotated, Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from pydantic import BaseModel
 from database import SessionLocal, engine
 import models
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import date
+import logging
 
 # Commented out lines below allow db to be regenerated after deleting, useful when still modifying columns
 # from database import Base
@@ -19,6 +20,7 @@ app = FastAPI()
 # Configure CORS settings to allow specific origins for frontend access
 origins = [
     'http://localhost:5173',
+    'http://127.0.0.1:5173'
 ]
 
 app.add_middleware(
@@ -111,10 +113,33 @@ async def get_animal(id: int, db: db_dependency):
 
 
 # Route to read and return a list of animals, with optional pagination parameters
+# Updated query parameters to handle filters
 @app.get("/animals/", response_model=List[AnimalModel])
-async def read_animals(db: db_dependency, skip: int = 0, limit: int = 100):
-    animals = db.query(models.Animal).offset(skip).limit(limit).all() # Query animals with pagination
-    return animals                                                    # Return the list of queried animals
+async def read_animals(
+    db: db_dependency,
+    skip: int = 0,
+    limit: int = 100,
+    animal_type: Optional[str] = None,
+    breed: Optional[List[str]] = None,
+    sex_upon_outcome: Optional[str] = None,
+    min_age: Optional[int] = None,
+    max_age: Optional[int] = None,
+):
+    logging.info("Filters received: animal_type=%s, breed=%s, ...", animal_type, breed)
+    query = db.query(models.Animal)
+
+    if animal_type:
+        query = query.filter(models.Animal.animal_type == animal_type)
+    if breed:
+        query = query.filter(models.Animal.breed.in_(breed))
+    if sex_upon_outcome:
+        query = query.filter(models.Animal.sex_upon_outcome == sex_upon_outcome)
+    if min_age is not None:
+        query = query.filter(models.Animal.age_upon_outcome_in_weeks >= min_age)
+    if max_age is not None:
+        query = query.filter(models.Animal.age_upon_outcome_in_weeks <= max_age)
+
+    return query.offset(skip).limit(limit).all()
 
 
 # Route to update an existing animal by ID
