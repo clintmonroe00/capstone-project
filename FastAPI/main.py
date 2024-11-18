@@ -8,10 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import date
 
 # Commented out lines below allow db to be regenerated after deleting, useful when still modifying columns
-from database import Base
-from models import Animal
+# from database import Base
+# from models import Animal
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI application
 app = FastAPI()

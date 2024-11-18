@@ -1,10 +1,10 @@
 import React from 'react';
-import AnimalForm from '../components/AnimalForm'; // Adjust path if necessary
+import AnimalForm from '../components/AnimalForm'; 
 
 function AddAnimal() {
   return (
     <div className='container mt-4'>
-      <h2>Add a New Animal</h2> {/* TESTING - CONFIRM CONTENT APPEARS ON PAGE AS EXPECTED */}
+      {/* Render the AnimalForm component inside a container */}
       <AnimalForm />
     </div>
   );
