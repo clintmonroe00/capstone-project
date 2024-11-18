@@ -2,6 +2,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.60.5",
     "@tanstack/react-query-devtools": "^5.60.5",
+    "@tanstack/react-table": "^8.20.5",
     "axios": "^1.7.7"
   }
 }
