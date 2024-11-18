@@ -156,3 +156,13 @@ async def update_animal(id: int, animal: AnimalBase, db: db_dependency):
     db.commit()  # Commit the changes to the database
     db.refresh(db_animal)  # Refresh the object to get updated data
     return db_animal
+
+# Route to delete an existing animal by ID
+@app.delete("/animals/{id}", status_code=200)
+async def delete_animal(id: int, db: db_dependency):
+    db_animal = db.query(models.Animal).filter(models.Animal.rec_num == id).first()
+    if not db_animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+    db.delete(db_animal)
+    db.commit()
+    return {"message": "Animal deleted successfully"}

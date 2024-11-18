@@ -37,3 +37,15 @@ export async function createAnimal(newAnimal) {
     }
     return response.json();
 }
+
+// Delete a specific animal by its ID
+export async function deleteAnimal(id) {
+    const response = await fetch(`http://localhost:8000/animals/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete the animal.");
+    }
+    return response.json(); 
+}

@@ -13,11 +13,6 @@ function App() {
           <Link className='navbar-brand' to="/">
             Animal Shelter App
           </Link>
-          <div>
-            <Link className='nav-link text-white' to="/add-animal">
-              Add New Animal
-            </Link>
-          </div>
         </div>
       </nav>
 

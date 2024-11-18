@@ -7,8 +7,10 @@ import {
   createColumnHelper,
   flexRender,
 } from '@tanstack/react-table';
+import { useNavigate } from 'react-router-dom';
 
-const AnimalTable = ({ data }) => {
+const AnimalTable = ({ data, onDelete }) => {
+  const navigate = useNavigate();
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [pagination, setPagination] = useState({
@@ -20,12 +22,12 @@ const AnimalTable = ({ data }) => {
   const filteredData = useMemo(() => {
     return data.filter((row) =>
       Object.values(row)
-        .join(" ")
+        .join(' ')
         .toLowerCase()
         .includes(globalFilter.toLowerCase())
     );
   }, [data, globalFilter]);
-  
+
   const paginatedData = useMemo(() => {
     const start = pagination.pageIndex * pagination.pageSize;
     const end = start + pagination.pageSize;
@@ -39,16 +41,6 @@ const AnimalTable = ({ data }) => {
   const columnHelper = createColumnHelper();
   const columns = useMemo(
     () => [
-      /* --- RECORD NUMBER DOES NOT NEED TO BE DISPLAYED ---
-      columnHelper.accessor('rec_num', {
-        header: 'Record Number',
-        cell: (info) => info.getValue(),
-      }),
-      */
-      columnHelper.accessor('animal_id', {
-        header: 'Animal ID',
-        cell: (info) => info.getValue(),
-      }),
       columnHelper.accessor('animal_type', {
         header: 'Type',
         cell: (info) => info.getValue(),
@@ -79,38 +71,41 @@ const AnimalTable = ({ data }) => {
         header: 'Name',
         cell: (info) => info.getValue() || 'Unknown',
       }),
-      columnHelper.accessor('outcome_subtype', {
-        header: 'Outcome Subtype',
-        cell: (info) => info.getValue() || 'N/A',
-      }),
       columnHelper.accessor('outcome_type', {
         header: 'Outcome Type',
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('sex_upon_outcome', {
-        header: 'Sex Upon Outcome',
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('location_lat', {
-        header: 'Latitude',
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('location_long', {
-        header: 'Longitude',
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('age_upon_outcome', {
         header: 'Age Upon Outcome',
         cell: (info) => info.getValue() || 'N/A',
       }),
-      /* --- AGE UPON OUTCOME IN WEEKS DOES NOT NEED TO BE DISPLAYED ---
-      columnHelper.accessor('age_upon_outcome_in_weeks', {
-        header: 'Age Upon Outcome in Weeks',
-        cell: (info) => info.getValue() || 'N/A',
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => (
+          <div className="d-flex justify-content-center">
+            <button
+              className="btn btn-sm btn-primary me-2"
+              onClick={() => navigate(`/animal/${row.original.rec_num}/edit`)}
+            >
+              Edit
+            </button>
+            <button
+              className="btn btn-sm btn-danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Are you sure you want to delete this animal?")) {
+                  onDelete(row.original.rec_num);
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        ),
       }),
-      */
     ],
-    [columnHelper]
+    [columnHelper, navigate, onDelete]
   );
 
   const table = useReactTable({
@@ -132,100 +127,113 @@ const AnimalTable = ({ data }) => {
   });
 
   return (
-    <div className='container mt-4'>
-      <div className='mb-3'>
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
         <input
-          type='text'
-          placeholder='Search...'
+          type="text"
+          placeholder="Search..."
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className='form-control'
+          className="form-control"
+          style={{ width: '25%' }}
         />
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate('/add-animal')}
+        >
+          Add Animal
+        </button>
       </div>
-      <div className='table-responsive'>
-        <table className='table table-bordered table-hover'>
-          <thead className='thead-light'>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className='text-center'>
-                    <div
-                      {...{
-                        onClick: header.column.getToggleSortingHandler(),
-                        className: header.column.getCanSort() ? 'cursor-pointer' : '',
-                      }}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="table-responsive">
+        {filteredData.length === 0 ? (
+          <div className="text-center">No animals available to display in the table.</div>
+        ) : (
+          <table className="table table-bordered table-hover">
+            <thead className="thead-light">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className="text-start">
+                      <div
+                        {...{
+                          onClick: header.column.getToggleSortingHandler(),
+                          className: header.column.getCanSort() ? 'cursor-pointer' : '',
+                        }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-      <div className='d-flex justify-content-between align-items-center mt-3'>
-        <div>
-          <select
-            className='form-select'
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
-          >
-            {[5, 10, 20, 30].map((size) => (
-              <option key={size} value={size}>
-                Show {size}
-              </option>
-            ))}
-          </select>
+      {filteredData.length > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <div>
+            <select
+              className="form-select"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
+            >
+              {[5, 10, 20, 30].map((size) => (
+                <option key={size} value={size}>
+                  Show {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="pagination-controls">
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {'<<'}
+            </button>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {'<'}
+            </button>
+            <span className="mx-2">
+              Page {pagination.pageIndex + 1} of {table.getPageCount()}
+            </span>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              {'>'}
+            </button>
+            <button
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {'>>'}
+            </button>
+          </div>
         </div>
-        <div className='pagination-controls'>
-          <button
-            className='btn btn-sm btn-outline-primary'
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {'<<'}
-          </button>
-          <button
-            className='btn btn-sm btn-outline-primary'
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {'<'}
-          </button>
-          <span className='mx-2'>
-            Page {pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-          <button
-            className='btn btn-sm btn-outline-primary'
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            {'>'}
-          </button>
-          <button
-            className='btn btn-sm btn-outline-primary'
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            {'>>'}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
