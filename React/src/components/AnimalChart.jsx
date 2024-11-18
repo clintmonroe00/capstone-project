@@ -14,6 +14,11 @@ const AnimalChart = ({ data }) => {
     // Convert the object into an array for the chart
     const formattedData = Object.values(chartData);
 
+    // Check if there is any data to display
+    if (formattedData.length === 0) {
+        return <div>No animal breeds available to display on the chart.</div>;
+    }
+
     return (
         <div>
             <h5>Animal Distribution by Breed</h5>
@@ -33,7 +38,7 @@ const AnimalChart = ({ data }) => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="count" fill="#8884d8" />
+                <Bar dataKey="count" fill="#3B71CA" />
             </BarChart>
         </div>
     );

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchAnimals } from '../api/animals';
 import AnimalTable from '../components/AnimalTable';
 import AnimalChart from '../components/AnimalChart';
+import AnimalMap from '../components/AnimalMap';
 
 const FILTER_PRESETS = {
     WaterRescue: {
@@ -91,17 +92,13 @@ const AnimalLists = () => {
             <AnimalTable data={animals} />
 
             {/* Add new visualizations underneath AnimalTable */}
-            <div className="row mt-4">
-                <div className="col-md-6">
+            <div className="row mt-4 align-items-center justify-content-center">
+                <div className="col-md-6 d-flex justify-content-center">
                     <AnimalChart data={animals} />
                 </div>
-                
-                <div className="col-md-6">
-                    {/* Visualization 2 Placeholder */}
-                    <div className="p-3">
-                        <h5>Visualization 2</h5>
-                        <p>Content for the second visualization goes here.</p>
-                    </div>
+
+                <div className="col-md-6 d-flex justify-content-center">
+                    <AnimalMap data={animals} />
                 </div>
             </div>
         </div>
