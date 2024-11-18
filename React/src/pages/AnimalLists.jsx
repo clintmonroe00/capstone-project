@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAnimals } from '../api/animals';
 import AnimalTable from '../components/AnimalTable';
+import AnimalChart from '../components/AnimalChart';
 
 const FILTER_PRESETS = {
     WaterRescue: {
@@ -88,6 +89,21 @@ const AnimalLists = () => {
             </div>
             {/* Pass animals data to AnimalTable */}
             <AnimalTable data={animals} />
+
+            {/* Add new visualizations underneath AnimalTable */}
+            <div className="row mt-4">
+                <div className="col-md-6">
+                    <AnimalChart data={animals} />
+                </div>
+                
+                <div className="col-md-6">
+                    {/* Visualization 2 Placeholder */}
+                    <div className="p-3">
+                        <h5>Visualization 2</h5>
+                        <p>Content for the second visualization goes here.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
