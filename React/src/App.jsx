@@ -8,6 +8,7 @@ function App() {
   
   return (
     <div>
+      {/* Navigation bar */}
       <nav className='navbar navbar-dark bg-primary'>
         <div className='container-fluid'>
           <Link className='navbar-brand' to="/">
@@ -17,6 +18,7 @@ function App() {
       </nav>
 
       <div>
+        {/* Define application routes */}
         <Routes>
           <Route path='/' element={<AnimalLists />}/>
           <Route path='/animal/:id' element={<Animal />}/>

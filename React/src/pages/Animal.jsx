@@ -1,5 +1,3 @@
-// TEST PAGE, CAN REMOVE BEFORE PUBLISHING
-
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom';
 import { fetchAnimal } from '../api/animals';

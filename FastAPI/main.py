@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session, Query
 from pydantic import BaseModel
@@ -7,8 +7,12 @@ import models
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import date
 import logging
+from io import StringIO  
+import pandas as pd  
+import os 
+from datetime import datetime
 
-# Commented out lines below allow db to be regenerated after deleting, useful when still modifying columns
+# Uncomment the following lines to regenerate database tables during development
 # from database import Base
 # from models import Animal
 
@@ -31,6 +35,10 @@ app.add_middleware(
     allow_headers=["*"], # Allows all headers
 )
 
+# Directory to save uploaded CSV files
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # Base model representing the basic attributes of an animal
 class AnimalBase(BaseModel):
     animal_id: str
@@ -48,7 +56,7 @@ class AnimalBase(BaseModel):
 
 # Animal model class with additional database-specific fields and calculated properties
 class AnimalModel(AnimalBase):
-    rec_num: int # Unique record number for each animal
+    rec_num: int 
     age_upon_outcome: Optional[str] = None
     age_upon_outcome_in_weeks: Optional[int] = None
 
@@ -78,13 +86,13 @@ class AnimalModel(AnimalBase):
             return (self.date_of_outcome - self.date_of_birth).days // 7
         return None # Return None if date_of_birth is unavailable
 
-# Dependency function to provide a new database session per request
+# # Dependency to provide a database session for each request
 def get_db():
     db = SessionLocal()
     try:
-        yield db # Provide the database session
+        yield db 
     finally:
-        db.close() # Close the session after the request is processed
+        db.close() 
 
 # Annotated dependency for injecting the database session into route handlers
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -96,11 +104,11 @@ models.Base.metadata.create_all(bind=engine)
 # Route to create a new animal record in the database
 @app.post("/animals/", response_model=AnimalModel)
 async def create_animal(animal: AnimalBase, db: db_dependency):
-    db_animal = models.Animal(**animal.model_dump()) # Map request data to a database model
-    db.add(db_animal)                                # Add new animal record to the session
-    db.commit()                                      # Commit the session to save the record
-    db.refresh(db_animal)                            # Refresh to get the latest data from the database
-    return db_animal                                 # Return the newly created animal
+    db_animal = models.Animal(**animal.model_dump()) 
+    db.add(db_animal)
+    db.commit()
+    db.refresh(db_animal)
+    return db_animal
 
 
 # Route to fetch a single animal by ID
@@ -150,7 +158,7 @@ async def update_animal(id: int, animal: AnimalBase, db: db_dependency):
         raise HTTPException(status_code=404, detail="Animal not found")
 
     # Update the fields of the existing animal
-    for key, value in animal.dict().items():
+    for key, value in animal.model_dump().items():
         setattr(db_animal, key, value)
 
     db.commit()  # Commit the changes to the database
@@ -166,3 +174,63 @@ async def delete_animal(id: int, db: db_dependency):
     db.delete(db_animal)
     db.commit()
     return {"message": "Animal deleted successfully"}
+
+@app.post("/upload-csv/")
+async def upload_csv(db: db_dependency, file: UploadFile = File(...)):
+    # Ensure the uploaded file is a CSV
+    if file.content_type != "text/csv":
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+
+    try:
+        # Read the uploaded CSV file content
+        content = await file.read()
+        data = pd.read_csv(StringIO(content.decode('utf-8')))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading CSV: {e}")
+
+    # Define required columns
+    required_columns = [
+        'animal_id', 'animal_type', 'breed', 'color', 'date_of_birth',
+        'date_of_outcome', 'sex_upon_outcome', 'location_lat', 'location_long'
+    ]
+
+    # Validate required columns in the CSV
+    if not all(column in data.columns for column in required_columns):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required columns. Required: {', '.join(required_columns)}"
+        )
+
+    try:
+        # Process each row and insert into the database
+        for _, row in data.iterrows():
+            # Convert string dates to Python `date` objects
+            date_of_birth = datetime.strptime(row['date_of_birth'], '%Y-%m-%d').date()
+            date_of_outcome = datetime.strptime(row['date_of_outcome'], '%Y-%m-%d').date()
+
+            animal = Animal(
+                animal_id=row['animal_id'],
+                animal_type=row['animal_type'],
+                breed=row['breed'],
+                color=row['color'],
+                date_of_birth=date_of_birth,
+                date_of_outcome=date_of_outcome,
+                name=row.get('name'),
+                outcome_subtype=row.get('outcome_subtype'),
+                outcome_type=row.get('outcome_type'),
+                sex_upon_outcome=row['sex_upon_outcome'],
+                location_lat=row['location_lat'],
+                location_long=row['location_long']
+            )
+            db.add(animal)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error inserting data: {e}")
+
+    # Save the uploaded file in the uploads directory for reference
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    return {"message": "CSV uploaded and data imported successfully!", "file_path": file_path}

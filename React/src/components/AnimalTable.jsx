@@ -11,14 +11,16 @@ import { useNavigate } from 'react-router-dom';
 
 const AnimalTable = ({ data, onDelete }) => {
   const navigate = useNavigate();
+  
+   // State variables for table sorting, global search filter, and pagination
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 5,
+    pageIndex: 0, // Current page index
+    pageSize: 5,  // Number of rows per page
   });
 
-  // Apply global filter and paginate data
+  // Filter data based on the global search input
   const filteredData = useMemo(() => {
     return data.filter((row) =>
       Object.values(row)
@@ -28,16 +30,17 @@ const AnimalTable = ({ data, onDelete }) => {
     );
   }, [data, globalFilter]);
 
+   // Paginate the filtered data
   const paginatedData = useMemo(() => {
     const start = pagination.pageIndex * pagination.pageSize;
     const end = start + pagination.pageSize;
     return filteredData.slice(start, end);
   }, [filteredData, pagination]);
 
-  // Calculate page count based on filtered data
+  // Calculate the total number of pages
   const pageCount = Math.ceil(filteredData.length / pagination.pageSize);
 
-  // Column helper and definitions
+  // Helper for defining and formatting table columns
   const columnHelper = createColumnHelper();
   const columns = useMemo(
     () => [
@@ -108,6 +111,7 @@ const AnimalTable = ({ data, onDelete }) => {
     [columnHelper, navigate, onDelete]
   );
 
+  // Configure the table instance with data, columns, and states
   const table = useReactTable({
     data: paginatedData,
     columns,
@@ -148,7 +152,7 @@ const AnimalTable = ({ data, onDelete }) => {
         {filteredData.length === 0 ? (
           <div className="text-center">No animals available to display in the table.</div>
         ) : (
-          <table className="table table-bordered table-hover">
+          <table className="table table-bordered table-hover table-striped">
             <thead className="thead-light">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>

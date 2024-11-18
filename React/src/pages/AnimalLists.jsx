@@ -104,8 +104,10 @@ const AnimalLists = () => {
                     ))}
                 </div>
             </div>
-            {/* Pass animals data to AnimalTable */}
-            <AnimalTable data={animals} onDelete={handleDelete} />
+            
+            <div className='mb-5'>
+                <AnimalTable data={animals} onDelete={handleDelete} />
+            </div>
 
             {/* Add new visualizations underneath AnimalTable */}
             <div className='row mt-4 align-items-center justify-content-center'>
