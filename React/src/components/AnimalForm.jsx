@@ -22,6 +22,7 @@ const AnimalForm = ({ onSubmit }) => {
   const { id } = useParams(); 
   const navigate = useNavigate(); //
   const [formData, setFormData] = useState(initialFormData); // State to track form data
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (id) {
@@ -41,21 +42,23 @@ const AnimalForm = ({ onSubmit }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setErrors({ ...errors, [name]: null});
   };
 
   // Render a reusable input field component
-  
   const renderField = (label, type = 'text', name, required = false) => (
     <div className='col-md-6'>
       <label className='form-label'>{label}</label>
       <input
         type={type}
         name={name}
-        className='form-control'
+        className={`form-control ${errors[name] ? 'is-invalid' : ''}`} // Add is-invalid class if there's an error
         value={formData[name] ?? ''} // Use an empty string if the value is null
         onChange={handleInputChange}
         required={required}
       />
+      {errors[name] && <div className='invalid-feedback'>{errors[name]}</div>} {/* Display error message */}
     </div>
   );
 
@@ -90,7 +93,29 @@ const AnimalForm = ({ onSubmit }) => {
         setFormData(initialFormData);  // Reset the form
         navigate('/');
       })
-      .catch((error) => console.error('Error submitting form:', error));
+      // .catch((error) => console.error('Error submitting form:', error));
+      .catch((error) => {
+        if (error.response) {
+          // Handle validation errors
+          if (error.response.status === 422) {
+            const errorDetails = error.response.data.detail;
+            const validationErrors = {};
+            errorDetails.forEach((err) => {
+              const field = err.loc[1];          // Extract the field name from 'loc'
+              validationErrors[field] = err.msg; // Mapp error messages
+            });
+            setErrors(validationErrors);         // Update the errors state
+          } else {
+            // Handle other types of errors
+            alert('An error occured while submitting the form.');
+            console.error('Error:', error.response.data);
+          }
+        } else {
+          // Handle network errors or unexpected errors
+          alert('Unable to connect to the server. Please try again later.');
+          console.error('Network or unexpected error:', error);
+        }
+      });
     }
   };
 

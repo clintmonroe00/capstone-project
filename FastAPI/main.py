@@ -1,16 +1,15 @@
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from typing import Annotated, Optional, List
 from sqlalchemy.orm import Session, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator, ValidationError
 from database import SessionLocal, engine
 import models
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import date
+from datetime import date, datetime
 import logging
 from io import StringIO  
 import pandas as pd  
 import os 
-from datetime import datetime
 
 # Uncomment the following lines to regenerate database tables during development
 # from database import Base
@@ -41,19 +40,45 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Base model representing the basic attributes of an animal
 class AnimalBase(BaseModel):
-    animal_id: str
-    animal_type: str
-    breed: str
-    color: str
+    animal_id: str = Field(
+        ...,
+        pattern=r'^[A-Za-z0-9]+$',
+        min_length=5,
+        max_length=30
+    )
+    animal_type: str = Field(
+        ...,
+        pattern=r'^[A-Za-z]+$',
+        min_length=3,
+        max_length=30
+    )
+    breed: str = Field(
+        ...,
+        min_length=3,
+        max_length=60
+    )
+    color: str = Field(
+        ...,
+        min_length=3,
+        max_length=30
+    )
     date_of_birth: date
     date_of_outcome: date
-    name: Optional[str]
-    outcome_subtype: Optional[str]
-    outcome_type: Optional[str]
-    sex_upon_outcome: str
+    name: Optional[str] = Field(
+        max_length=30
+    )
+    outcome_subtype: Optional[str] = Field(
+        max_length=30
+    )
+    outcome_type: Optional[str] = Field(
+        max_length=30
+    )
+    sex_upon_outcome: Optional[str] = Field(
+        max_length=30
+    )
     location_lat: float
     location_long: float
-
+    
 # Animal model class with additional database-specific fields and calculated properties
 class AnimalModel(AnimalBase):
     rec_num: int 
