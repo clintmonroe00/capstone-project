@@ -3,20 +3,23 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../api/firebase';
 import { useNavigate } from 'react-router-dom';
 
+// Signup component for new user registration
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Function to handle signup form submission
   const handleSignup = async (e) => {
     e.preventDefault();
     setError(null); // Clear any previous errors
     try {
+      // Attempt to create a new user with email and password
       await createUserWithEmailAndPassword(auth, email, password);
       navigate('/'); // Redirect to home page after successful signup
     } catch (err) {
-      setError(err.message); // Display error to user
+      setError(err.message); // Set error message if signup fails
     }
   };
 

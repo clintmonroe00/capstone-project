@@ -8,13 +8,15 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  // Function to handle login form submission
   const handleLogin = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page reload on form submission
     try {
+      // Attempt to sign in with email and password
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/'); // Redirect to home page
+      navigate('/'); // Redirect to home page on successful login
     } catch (error) {
-      console.error(error.message);
+      console.error(error.message); // Log error messages to the console
     }
   };
 

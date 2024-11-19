@@ -6,15 +6,20 @@ import App from './App';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 
-// Create a client
+// Create a React Query client instance
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    {/* Wrap application in BrowserRouter for routing */}
     <BrowserRouter>
-      <AuthProvider> {/* Wrap App with AuthProvider */}
+      {/* Provide authentication context to the entire app */}
+      <AuthProvider> 
+        {/* Provide React Query context to the app */}
         <QueryClientProvider client={queryClient}>
+          {/* Main application component */}
           <App />
+          {/* Add React Query Devtools for development and debugging */}
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </AuthProvider>
