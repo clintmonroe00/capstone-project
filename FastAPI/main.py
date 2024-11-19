@@ -1,15 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from typing import Annotated, Optional, List
-from sqlalchemy.orm import Session, Query
-from pydantic import BaseModel, Field, model_validator, ValidationError
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from database import SessionLocal, engine
 import models
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import date, datetime
-import logging
-from io import StringIO  
-import pandas as pd  
-import os 
+import pandas as pd
+import os
 
 # Uncomment the following lines to regenerate database tables during development
 # from database import Base
@@ -17,8 +19,20 @@ import os
 
 # Base.metadata.create_all(bind=engine)
 
-# Initialize FastAPI application
+# Initialize FastAPI application and SlowAPI Limiter
 app = FastAPI()
+limiter = Limiter(key_func=get_remote_address)
+
+# Apply middleware to catch rate-limit exceptions
+@app.middleware("http")
+async def slowapi_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except RateLimitExceeded as exc:
+        return JSONResponse(
+            status_code=429, content={"detail": "Rate limit exceeded. Try again later."}
+        )
 
 # Configure CORS settings to allow specific origins for frontend access
 origins = [
@@ -30,8 +44,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=['*'], # Allows all HTTP methods (e.g., GET, POST, PUT, DELETE)
-    allow_headers=['*'], # Allows all headers
+    allow_methods=['*'],  # Allows all HTTP methods (e.g., GET, POST, PUT, DELETE)
+    allow_headers=['*'],  # Allows all headers
 )
 
 # Directory to save uploaded CSV files
@@ -78,7 +92,7 @@ class AnimalBase(BaseModel):
     )
     location_lat: float
     location_long: float
-    
+
 # Animal model class with additional database-specific fields and calculated properties
 class AnimalModel(AnimalBase):
     rec_num: int 
@@ -86,32 +100,9 @@ class AnimalModel(AnimalBase):
     age_upon_outcome_in_weeks: Optional[int] = None
 
     class Config:
-        from_attributes = True # Enable ORM mode for attribute mapping
+        from_attributes = True  # Enable ORM mode for attribute mapping
 
-    @property
-    def age_upon_outcome(self):
-        # Calculate the age in a readable string format
-        if self.date_of_birth and self.date_of_outcome:
-            delta = self.date_of_outcome - self.date_of_birth
-            years = delta.days // 365
-            months = (delta.days % 365) // 30
-
-            if years >= 1:
-                return f'{years} year{'s' if years > 1 else ''}'
-            elif months >= 1:
-                return f'{months} month{'s' if months > 1 else ''}'
-            else:
-                return '0 years'
-        return None
-
-    @property
-    def age_upon_outcome_in_weeks(self):
-        # Calculate the age upon outcome in weeks if date_of_birth is available
-        if self.date_of_birth:
-            return (self.date_of_outcome - self.date_of_birth).days // 7
-        return None # Return None if date_of_birth is unavailable
-
-# # Dependency to provide a database session for each request
+# Dependency to provide a database session for each request
 def get_db():
     db = SessionLocal()
     try:
@@ -119,36 +110,36 @@ def get_db():
     finally:
         db.close() 
 
-# Annotated dependency for injecting the database session into route handlers
 db_dependency = Annotated[Session, Depends(get_db)]
 
 # Create database tables from SQLAlchemy models if they don't already exist
 models.Base.metadata.create_all(bind=engine)
 
-
-# Route to create a new animal record in the database
+# Route to create a new animal record with rate-limiting
 @app.post('/animals/', response_model=AnimalModel)
-async def create_animal(animal: AnimalBase, db: db_dependency):
+@limiter.limit("5/minute")
+async def create_animal(request: Request, animal: AnimalBase, db: db_dependency):
     db_animal = models.Animal(**animal.model_dump()) 
     db.add(db_animal)
     db.commit()
     db.refresh(db_animal)
     return db_animal
 
-
-# Route to fetch a single animal by ID
+# Route to fetch a single animal by ID with rate-limiting
 @app.get('/animals/{id}', response_model=AnimalModel)
-async def get_animal(id: int, db: db_dependency):
+@limiter.limit("10/minute")
+async def get_animal(request: Request, id: int, db: db_dependency):
     animal = db.query(models.Animal).filter(models.Animal.rec_num == id).first()
     if not animal:
         raise HTTPException(status_code=404, detail='Animal not found')
     return animal
 
 
-# Route to read and return a list of animals, with optional pagination parameters
-# Updated query parameters to handle filters
+# Route to read animals with optional filters and rate-limiting
 @app.get('/animals/', response_model=List[AnimalModel])
+@limiter.limit("20/minute")
 async def read_animals(
+    request: Request,
     db: db_dependency,
     skip: int = 0,
     limit: int = 100,
@@ -158,7 +149,6 @@ async def read_animals(
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
 ):
-    logging.info('Filters received: animal_type=%s, breed=%s, ...', animal_type, breed)
     query = db.query(models.Animal)
 
     if animal_type:
@@ -190,6 +180,7 @@ async def update_animal(id: int, animal: AnimalBase, db: db_dependency):
     db.refresh(db_animal)  # Refresh the object to get updated data
     return db_animal
 
+
 # Route to delete an existing animal by ID
 @app.delete('/animals/{id}', status_code=200)
 async def delete_animal(id: int, db: db_dependency):
@@ -200,6 +191,7 @@ async def delete_animal(id: int, db: db_dependency):
     db.commit()
     return {'message': 'Animal deleted successfully'}
 
+# Route to upload a csv to the database
 @app.post('/upload-csv/')
 async def upload_csv(db: db_dependency, file: UploadFile = File(...)):
     # Ensure the uploaded file is a CSV
