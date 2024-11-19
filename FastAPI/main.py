@@ -31,12 +31,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"], # Allows all HTTP methods (e.g., GET, POST, PUT, DELETE)
-    allow_headers=["*"], # Allows all headers
+    allow_methods=['*'], # Allows all HTTP methods (e.g., GET, POST, PUT, DELETE)
+    allow_headers=['*'], # Allows all headers
 )
 
 # Directory to save uploaded CSV files
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = 'uploads'
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Base model representing the basic attributes of an animal
@@ -72,11 +72,11 @@ class AnimalModel(AnimalBase):
             months = (delta.days % 365) // 30
 
             if years >= 1:
-                return f"{years} year{'s' if years > 1 else ''}"
+                return f'{years} year{'s' if years > 1 else ''}'
             elif months >= 1:
-                return f"{months} month{'s' if months > 1 else ''}"
+                return f'{months} month{'s' if months > 1 else ''}'
             else:
-                return "0 years"
+                return '0 years'
         return None
 
     @property
@@ -102,7 +102,7 @@ models.Base.metadata.create_all(bind=engine)
 
 
 # Route to create a new animal record in the database
-@app.post("/animals/", response_model=AnimalModel)
+@app.post('/animals/', response_model=AnimalModel)
 async def create_animal(animal: AnimalBase, db: db_dependency):
     db_animal = models.Animal(**animal.model_dump()) 
     db.add(db_animal)
@@ -112,17 +112,17 @@ async def create_animal(animal: AnimalBase, db: db_dependency):
 
 
 # Route to fetch a single animal by ID
-@app.get("/animals/{id}", response_model=AnimalModel)
+@app.get('/animals/{id}', response_model=AnimalModel)
 async def get_animal(id: int, db: db_dependency):
     animal = db.query(models.Animal).filter(models.Animal.rec_num == id).first()
     if not animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
+        raise HTTPException(status_code=404, detail='Animal not found')
     return animal
 
 
 # Route to read and return a list of animals, with optional pagination parameters
 # Updated query parameters to handle filters
-@app.get("/animals/", response_model=List[AnimalModel])
+@app.get('/animals/', response_model=List[AnimalModel])
 async def read_animals(
     db: db_dependency,
     skip: int = 0,
@@ -133,7 +133,7 @@ async def read_animals(
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
 ):
-    logging.info("Filters received: animal_type=%s, breed=%s, ...", animal_type, breed)
+    logging.info('Filters received: animal_type=%s, breed=%s, ...', animal_type, breed)
     query = db.query(models.Animal)
 
     if animal_type:
@@ -151,11 +151,11 @@ async def read_animals(
 
 
 # Route to update an existing animal by ID
-@app.put("/animals/{id}", response_model=AnimalModel)
+@app.put('/animals/{id}', response_model=AnimalModel)
 async def update_animal(id: int, animal: AnimalBase, db: db_dependency):
     db_animal = db.query(models.Animal).filter(models.Animal.rec_num == id).first()
     if not db_animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
+        raise HTTPException(status_code=404, detail='Animal not found')
 
     # Update the fields of the existing animal
     for key, value in animal.model_dump().items():
@@ -166,27 +166,27 @@ async def update_animal(id: int, animal: AnimalBase, db: db_dependency):
     return db_animal
 
 # Route to delete an existing animal by ID
-@app.delete("/animals/{id}", status_code=200)
+@app.delete('/animals/{id}', status_code=200)
 async def delete_animal(id: int, db: db_dependency):
     db_animal = db.query(models.Animal).filter(models.Animal.rec_num == id).first()
     if not db_animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
+        raise HTTPException(status_code=404, detail='Animal not found')
     db.delete(db_animal)
     db.commit()
-    return {"message": "Animal deleted successfully"}
+    return {'message': 'Animal deleted successfully'}
 
-@app.post("/upload-csv/")
+@app.post('/upload-csv/')
 async def upload_csv(db: db_dependency, file: UploadFile = File(...)):
     # Ensure the uploaded file is a CSV
-    if file.content_type != "text/csv":
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+    if file.content_type != 'text/csv':
+        raise HTTPException(status_code=400, detail='Invalid file type. Please upload a CSV file.')
 
     try:
         # Read the uploaded CSV file content
         content = await file.read()
         data = pd.read_csv(StringIO(content.decode('utf-8')))
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error reading CSV: {e}")
+        raise HTTPException(status_code=400, detail=f'Error reading CSV: {e}')
 
     # Define required columns
     required_columns = [
@@ -198,7 +198,7 @@ async def upload_csv(db: db_dependency, file: UploadFile = File(...)):
     if not all(column in data.columns for column in required_columns):
         raise HTTPException(
             status_code=400,
-            detail=f"Missing required columns. Required: {', '.join(required_columns)}"
+            detail=f'Missing required columns. Required: {', '.join(required_columns)}'
         )
 
     try:
@@ -226,11 +226,11 @@ async def upload_csv(db: db_dependency, file: UploadFile = File(...)):
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error inserting data: {e}")
+        raise HTTPException(status_code=500, detail=f'Error inserting data: {e}')
 
     # Save the uploaded file in the uploads directory for reference
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-    with open(file_path, "wb") as f:
+    with open(file_path, 'wb') as f:
         f.write(content)
 
-    return {"message": "CSV uploaded and data imported successfully!", "file_path": file_path}
+    return {'message': 'CSV uploaded and data imported successfully!', 'file_path': file_path}

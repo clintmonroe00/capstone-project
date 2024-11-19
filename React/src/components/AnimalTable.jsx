@@ -82,22 +82,26 @@ const AnimalTable = ({ data, onDelete }) => {
         header: 'Age Upon Outcome',
         cell: (info) => info.getValue() || 'N/A',
       }),
+      columnHelper.accessor('sex_upon_outcome', {
+        header: 'Sex Upon Outcome',
+        cell: (info) => info.getValue() || 'N/A',
+      }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <div className="d-flex justify-content-center">
+          <div className='d-flex justify-content-center'>
             <button
-              className="btn btn-sm btn-primary me-2"
+              className='btn btn-sm btn-primary me-2'
               onClick={() => navigate(`/animal/${row.original.rec_num}/edit`)}
             >
               Edit
             </button>
             <button
-              className="btn btn-sm btn-danger"
+              className='btn btn-sm btn-danger'
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm("Are you sure you want to delete this animal?")) {
+                if (window.confirm('Are you sure you want to delete this animal?')) {
                   onDelete(row.original.rec_num);
                 }
               }}
@@ -131,33 +135,33 @@ const AnimalTable = ({ data, onDelete }) => {
   });
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className='container mt-4'>
+      <div className='d-flex justify-content-between align-items-center mb-3'>
         <input
-          type="text"
-          placeholder="Search..."
+          type='text'
+          placeholder='Search...'
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="form-control"
+          className='form-control'
           style={{ width: '25%' }}
         />
         <button
-          className="btn btn-primary"
+          className='btn btn-primary'
           onClick={() => navigate('/add-animal')}
         >
           Add Animal
         </button>
       </div>
-      <div className="table-responsive">
+      <div className='table-responsive'>
         {filteredData.length === 0 ? (
-          <div className="text-center">No animals available to display in the table.</div>
+          <div className='text-center'>No animals available to display in the table.</div>
         ) : (
-          <table className="table table-bordered table-hover table-striped">
-            <thead className="thead-light">
+          <table className='table table-bordered table-hover table-striped'>
+            <thead className='thead-light'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="text-start">
+                    <th key={header.id} className='text-start'>
                       <div
                         {...{
                           onClick: header.column.getToggleSortingHandler(),
@@ -189,10 +193,10 @@ const AnimalTable = ({ data, onDelete }) => {
         )}
       </div>
       {filteredData.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
+        <div className='d-flex justify-content-between align-items-center mt-3'>
           <div>
             <select
-              className="form-select"
+              className='form-select'
               value={table.getState().pagination.pageSize}
               onChange={(e) => table.setPageSize(Number(e.target.value))}
             >
@@ -203,33 +207,33 @@ const AnimalTable = ({ data, onDelete }) => {
               ))}
             </select>
           </div>
-          <div className="pagination-controls">
+          <div className='pagination-controls'>
             <button
-              className="btn btn-sm btn-outline-primary"
+              className='btn btn-sm btn-outline-primary'
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
               {'<<'}
             </button>
             <button
-              className="btn btn-sm btn-outline-primary"
+              className='btn btn-sm btn-outline-primary'
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
               {'<'}
             </button>
-            <span className="mx-2">
+            <span className='mx-2'>
               Page {pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
             <button
-              className="btn btn-sm btn-outline-primary"
+              className='btn btn-sm btn-outline-primary'
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
               {'>'}
             </button>
             <button
-              className="btn btn-sm btn-outline-primary"
+              className='btn btn-sm btn-outline-primary'
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >

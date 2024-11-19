@@ -8,7 +8,7 @@ URL_DATABASE = 'sqlite:///./aac.db'
 
 # Create a SQLAlchemy engine to manage database connections
 # Setting 'check_same_thread' to False allows multiple threads to access the SQLite database
-engine = create_engine(URL_DATABASE, connect_args={"check_same_thread": False})
+engine = create_engine(URL_DATABASE, connect_args={'check_same_thread': False})
 
 # Create a configured session class bound to the engine for creating database sessions
 # autocommit=False: Requires manual commits for changes

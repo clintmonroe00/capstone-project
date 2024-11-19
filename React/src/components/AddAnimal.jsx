@@ -11,7 +11,7 @@ const AddAnimal = () => {
         onSuccess: () => {
             // Invalidate the animals query to ensure fresh data is fetched
             queryClient.invalidateQueries({ queryKey: ['animals'] })
-            console.log("Success!")
+            console.log('Success!')
         }
     });
 

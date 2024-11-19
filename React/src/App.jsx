@@ -1,12 +1,12 @@
-import { Route, Routes, Link } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext"; // Import useAuth
-import ProtectedRoute from "./components/ProtectedRoute";
-import Animal from "./pages/Animal";
-import AnimalLists from "./pages/AnimalLists";
-import EditAnimal from "./pages/EditAnimal";
-import AddAnimal from "./pages/AddAnimal";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import { Route, Routes, Link } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext'; // Import useAuth
+import ProtectedRoute from './components/ProtectedRoute';
+import Animal from './pages/Animal';
+import AnimalLists from './pages/AnimalLists';
+import EditAnimal from './pages/EditAnimal';
+import AddAnimal from './pages/AddAnimal';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   const { user, logout } = useAuth();
@@ -15,39 +15,39 @@ function App() {
     try {
       await logout();
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     }
   };
 
   return (
     <AuthProvider>
       <div>
-      <nav className="navbar navbar-dark bg-primary">
-          <div className="container-fluid d-flex align-items-center">
+      <nav className='navbar navbar-dark bg-primary'>
+          <div className='container-fluid d-flex align-items-center'>
             {/* Logo and Title */}
-            <div className="d-flex align-items-center">
+            <div className='d-flex align-items-center'>
               <img
-                src="./grazioso_salvare_logo_white.png"
-                alt="Grazioso Salvare Logo"
-                style={{ height: "40px", marginRight: "10px" }}
+                src='/grazioso_salvare_logo_white.png'
+                alt='Grazioso Salvare Logo'
+                style={{ height: '40px', marginRight: '10px' }}
               />
-              <Link className="navbar-brand mb-0 h1" to="/">
+              <Link className='navbar-brand mb-0 h1' to='/'>
                 Grazioso Salvare
               </Link>
             </div>
             
             {/* Login/Signup or Logout */}
-            <div className="ms-auto d-flex">
+            <div className='ms-auto d-flex'>
               {user ? (
-                <button className="btn btn-light me-2" onClick={handleLogout}>
+                <button className='btn btn-light me-2' onClick={handleLogout}>
                   Logout
                 </button>
               ) : (
                 <>
-                  <Link className="btn btn-light me-2" to="/login">
+                  <Link className='btn btn-light me-2' to='/login'>
                     Login
                   </Link>
-                  <Link className="btn btn-light" to="/signup">
+                  <Link className='btn btn-light' to='/signup'>
                     Sign Up
                   </Link>
                 </>
@@ -59,12 +59,12 @@ function App() {
         <div>
           <Routes>
             {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/signup' element={<Signup />} />
 
             {/* Protected Routes */}
             <Route
-              path="/"
+              path='/'
               element={
                 <ProtectedRoute>
                   <AnimalLists />
@@ -72,7 +72,7 @@ function App() {
               }
             />
             <Route
-              path="/animal/:id"
+              path='/animal/:id'
               element={
                 <ProtectedRoute>
                   <Animal />
@@ -80,7 +80,7 @@ function App() {
               }
             />
             <Route
-              path="/animal/:id/edit"
+              path='/animal/:id/edit'
               element={
                 <ProtectedRoute>
                   <EditAnimal />
@@ -88,7 +88,7 @@ function App() {
               }
             />
             <Route
-              path="/add-animal"
+              path='/add-animal'
               element={
                 <ProtectedRoute>
                   <AddAnimal />

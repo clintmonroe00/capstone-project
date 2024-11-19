@@ -1,11 +1,11 @@
-import React from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 const AnimalChart = ({ data }) => {
     // Transform the data into a format suitable for visualization.
     // Example: Count animals by breed.
     const chartData = data.reduce((acc, animal) => {
-        const breed = animal.breed || "Unknown";
+        const breed = animal.breed || 'Unknown';
         if (!acc[breed]) acc[breed] = { breed, count: 0 };
         acc[breed].count += 1;
         return acc;
@@ -33,12 +33,12 @@ const AnimalChart = ({ data }) => {
                     bottom: 5,
                 }}
             >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="breed" />
+                <CartesianGrid strokeDasharray='3 3' />
+                <XAxis dataKey='breed' />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="count" fill="#3B71CA" />
+                <Bar dataKey='count' fill='#3B71CA' />
             </BarChart>
         </div>
     );

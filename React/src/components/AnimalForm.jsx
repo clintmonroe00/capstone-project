@@ -20,14 +20,19 @@ const initialFormData = {
 
 const AnimalForm = ({ onSubmit }) => {
   const { id } = useParams(); 
+  const navigate = useNavigate(); //
   const [formData, setFormData] = useState(initialFormData); // State to track form data
 
   useEffect(() => {
     if (id) {
-      // Fetch existing animal data for editing if an ID is provided
       axios
         .get(`http://localhost:8000/animals/${id}`)
-        .then((response) => setFormData(response.data))
+        .then((response) => {
+          const sanitizedData = Object.fromEntries(
+            Object.entries(response.data).map(([key, value]) => [key, value ?? ''])
+          );
+          setFormData(sanitizedData);
+        })
         .catch((error) => console.error('Error fetching animal data:', error));
     }
   }, [id]);
@@ -39,6 +44,7 @@ const AnimalForm = ({ onSubmit }) => {
   };
 
   // Render a reusable input field component
+  
   const renderField = (label, type = 'text', name, required = false) => (
     <div className='col-md-6'>
       <label className='form-label'>{label}</label>
@@ -46,7 +52,7 @@ const AnimalForm = ({ onSubmit }) => {
         type={type}
         name={name}
         className='form-control'
-        value={formData[name]}
+        value={formData[name] ?? ''} // Use an empty string if the value is null
         onChange={handleInputChange}
         required={required}
       />

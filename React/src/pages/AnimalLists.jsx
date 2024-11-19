@@ -74,11 +74,11 @@ const AnimalLists = () => {
             const isDeleted = await deleteAnimal(animalId);
             if (isDeleted) {
                 queryClient.invalidateQueries(['animals']); // Refetch the animal list
-                alert("Animal deleted successfully!");
+                alert('Animal deleted successfully!');
             }
         } catch (error) {
-            console.error("Error deleting animal:", error);
-            alert("Failed to delete animal.");
+            console.error('Error deleting animal:', error);
+            alert('Failed to delete animal.');
         }
     };
 
