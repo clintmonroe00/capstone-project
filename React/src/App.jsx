@@ -22,20 +22,34 @@ function App() {
   return (
     <AuthProvider>
       <div>
-        <nav className="navbar navbar-dark bg-primary">
-          <div className="container-fluid">
-            <Link className="navbar-brand" to="/">
-              Animal Shelter App
-            </Link>
-            <div className="d-flex">
+      <nav className="navbar navbar-dark bg-primary">
+          <div className="container-fluid d-flex align-items-center">
+            {/* Logo and Title */}
+            <div className="d-flex align-items-center">
+              <img
+                src="./grazioso_salvare_logo_white.png"
+                alt="Grazioso Salvare Logo"
+                style={{ height: "40px", marginRight: "10px" }}
+              />
+              <Link className="navbar-brand mb-0 h1" to="/">
+                Grazioso Salvare
+              </Link>
+            </div>
+            
+            {/* Login/Signup or Logout */}
+            <div className="ms-auto d-flex">
               {user ? (
                 <button className="btn btn-light me-2" onClick={handleLogout}>
                   Logout
                 </button>
               ) : (
                 <>
-                  <Link className="btn btn-light me-2" to="/login">Login</Link>
-                  <Link className="btn btn-light" to="/signup">Sign Up</Link>
+                  <Link className="btn btn-light me-2" to="/login">
+                    Login
+                  </Link>
+                  <Link className="btn btn-light" to="/signup">
+                    Sign Up
+                  </Link>
                 </>
               )}
             </div>
