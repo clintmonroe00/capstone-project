@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+React/node_modules/
 # dist (removed for github pages publishing)
 dist-ssr
 *.local
