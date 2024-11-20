@@ -27,7 +27,7 @@ function App() {
             {/* Logo and Title */}
             <div className='d-flex align-items-center'>
               <img
-                src='/grazioso_salvare_logo_white.png'
+                src='/capstone-project/grazioso_salvare_logo_white.png' // accounts for base in gh-pages deployment
                 alt='Grazioso Salvare Logo'
                 style={{ height: '40px', marginRight: '10px' }}
               />
