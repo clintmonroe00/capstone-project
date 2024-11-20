@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import date, datetime
 import pandas as pd
 import os
+from io import StringIO
+from models import Animal
 
 # Uncomment the following lines to regenerate database tables during development
 # from database import Base
@@ -37,7 +39,8 @@ async def slowapi_middleware(request: Request, call_next):
 # Configure CORS settings to allow specific origins for frontend access
 origins = [
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    'https://clintmonroe00.github.io/capstone-project/',
 ]
 
 app.add_middleware(
